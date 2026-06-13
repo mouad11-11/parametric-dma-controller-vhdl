@@ -1,0 +1,128 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity dma_fsm is
+    generic (
+        BURST_SIZE : integer := 4
+    );
+    port (
+        clk            : in  std_logic;
+        reset          : in  std_logic;
+        
+        -- Control from Register File
+        start_transfer : in  std_logic;
+        total_len      : in  unsigned(15 downto 0);
+        
+        -- Bus Arbitration Handshake
+        bus_req        : out std_logic;
+        bus_grant      : in  std_logic;
+        
+        -- Memory Interface Signals
+        mem_read       : out std_logic;
+        mem_write      : out std_logic;
+        mem_ready      : in  std_logic;
+        
+        -- Internal Status
+        fifo_full      : in  std_logic;
+        fifo_empty     : in  std_logic;
+        dma_busy       : out std_logic;
+        dma_done_irq   : out std_logic
+    );
+end entity dma_fsm;
+
+architecture behavioral of dma_fsm is
+
+    -- State definitions
+    type state_type is (IDLE, REQ_BUS, READ_BURST, WRITE_BURST, CHECK_COUNT, DONE);
+    signal current_state, next_state : state_type;
+
+    -- Internal counters for tracking progress
+    signal burst_counter : unsigned(2 downto 0) := (others => '0');
+    signal rem_len       : unsigned(15 downto 0);
+
+begin
+
+    -----------------------------------------------------
+    -- Process 1: State Register (Sequential)
+    -----------------------------------------------------
+    -- This process updates the current state on every clock edge.
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            current_state <= IDLE;
+            rem_len       <= (others => '0');
+        elsif rising_edge(clk) then
+            current_state <= next_state;
+            
+            -- Update remaining length when transfer starts or a burst finishes
+            if current_state = IDLE and start_transfer = '1' then
+                rem_len <= total_len;
+            elsif current_state = CHECK_COUNT and rem_len >= to_unsigned(BURST_SIZE, 16) then
+                rem_len <= rem_len - to_unsigned(BURST_SIZE, 16);
+            end if;
+        end if;
+    end process;
+
+    -----------------------------------------------------
+    -- Process 2: Next State & Output Logic (Combinatorial)
+    -----------------------------------------------------
+    -- This process decides "where to go" based on input triggers.
+    process(current_state, start_transfer, bus_grant, fifo_full, fifo_empty, rem_len)
+    begin
+        -- Default assignments to prevent latches and maintain high-Z bus behavior
+        next_state   <= current_state;
+        bus_req      <= '0';
+        mem_read     <= '0';
+        mem_write    <= '0';
+        dma_busy     <= '1';
+        dma_done_irq <= '0';
+
+        case current_state is
+            
+            when IDLE =>
+                dma_busy <= '0';
+                if start_transfer = '1' then
+                    next_state <= REQ_BUS;
+                end if;
+
+            when REQ_BUS =>
+                bus_req <= '1'; -- Ask the arbiter for the bus
+                if bus_grant = '1' then
+                    next_state <= READ_BURST;
+                end if;
+
+            when READ_BURST =>
+                bus_req  <= '1'; -- Keep bus control
+                mem_read <= '1'; -- Activate read command to memory
+                if fifo_full = '1' then
+                    next_state <= WRITE_BURST;
+                end if;
+
+            when WRITE_BURST =>
+                bus_req   <= '1';
+                mem_write <= '1'; -- Activate write command to memory
+                if fifo_empty = '1' then
+                    next_state <= CHECK_COUNT;
+                end if;
+
+            when CHECK_COUNT =>
+                bus_req <= '1';
+                -- If length is zero or less than a burst, we are finished
+                if rem_len <= to_unsigned(BURST_SIZE, 16) then
+                    next_state <= DONE;
+                else
+                    next_state <= REQ_BUS; -- Request bus for next burst
+                end if;
+
+            when DONE =>
+                bus_req      <= '0'; -- Release the bus
+                dma_done_irq <= '1'; -- Trigger interrupt to CPU
+                next_state   <= IDLE;
+
+            when others =>
+                next_state <= IDLE;
+        end case;
+    end process;
+
+end architecture behavioral;

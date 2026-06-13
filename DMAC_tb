@@ -1,0 +1,72 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity DMAC_tb is
+end entity DMAC_tb;
+
+architecture sim of DMAC_tb is
+    signal clk            : std_logic := '0';
+    signal reset          : std_logic := '1';
+    signal cpu_addr       : std_logic_vector(1 downto 0) := (others => '0');
+    signal cpu_write_en   : std_logic := '0';
+    signal system_data    : std_logic_vector(31 downto 0) := (others => 'Z');
+    signal master_addr    : std_logic_vector(31 downto 0);
+    signal master_rd      : std_logic;
+    signal master_wr      : std_logic;
+    signal master_ready   : std_logic := '0';
+    signal dma_irq        : std_logic;
+
+begin
+    clk <= not clk after 10 ns;
+
+    DUT: entity work.DMAC
+        port map (
+            clk => clk, reset => reset, cpu_addr => cpu_addr,
+            cpu_write_en => cpu_write_en, system_data => system_data,
+            master_addr => master_addr, master_rd => master_rd,
+            master_wr => master_wr, master_ready => master_ready, dma_irq => dma_irq
+        );
+
+    -- Drive test data during DMA Reads
+    system_data <= X"ABCD1234" when (master_rd = '1' and master_ready = '1') else (others => 'Z');
+
+    Test_Proc: process
+    begin
+        reset <= '1';
+        wait for 40 ns;
+        reset <= '0';
+        wait until rising_edge(clk);
+
+        -- Step 1: Source Address
+        cpu_addr <= "00"; system_data <= X"00001000"; cpu_write_en <= '1';
+        wait until rising_edge(clk);
+        
+        -- Step 2: Destination Address
+        cpu_addr <= "01"; system_data <= X"00002000";
+        wait until rising_edge(clk);
+
+        -- Step 3: Total Length
+        cpu_addr <= "10"; system_data <= X"00000008"; 
+        wait until rising_edge(clk);
+
+        -- Step 4: Start Bit
+        cpu_addr <= "11"; system_data <= X"00000001"; 
+        wait until rising_edge(clk);
+        
+        cpu_write_en <= '0';
+        system_data <= (others => 'Z'); 
+
+        -- Step 5: Proactive Handshake Loop
+        while dma_irq = '0' loop
+            master_ready <= '1'; -- Grant bus and signal mem ready
+            wait until rising_edge(clk);
+            exit when dma_irq = '1';
+        end loop;
+        
+        master_ready <= '0';
+        wait for 100 ns;
+        report "DMA Simulation Finished Successfully";
+        std.env.stop;
+    end process;
+end architecture;

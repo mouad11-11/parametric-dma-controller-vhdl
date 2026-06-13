@@ -1,0 +1,20 @@
+Info: Start Nativelink Simulation process
+Error: ERROR: Can't open project: DMAC
+ERROR: Can't open project: DMAC
+Error: NativeLink simulation flow was NOT successful
+
+
+
+================The following additional information is provided to help identify the cause of error while running nativelink scripts=================
+Nativelink TCL script failed with errorCode:  NONE
+Nativelink TCL script failed with errorInfo:  ERROR: Can't open project: DMAC
+
+    while executing
+"project_open $project -force -cmp $action_pt"
+rrorInfo:  1
+    invoked from within
+"if ![qmap_successfully_completed] {
+	    nl_postmsg error "Error: Run Analysis and Elaboration successfully before starting RTL NativeLink Simulation"..."
+    (procedure "run_eda_simulation_tool" line 231)
+    invoked from within
+"run_eda_simulation_tool eda_opts_hash"

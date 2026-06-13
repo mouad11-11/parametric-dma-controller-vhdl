@@ -1,0 +1,9 @@
+
+State Machine - |DMAC|dma_fsm:U_FSM|current_state
+Name current_state.DONE current_state.CHECK_COUNT current_state.WRITE_BURST current_state.READ_BURST current_state.REQ_BUS current_state.IDLE 
+current_state.IDLE 0 0 0 0 0 0 
+current_state.REQ_BUS 0 0 0 0 1 1 
+current_state.READ_BURST 0 0 0 1 0 1 
+current_state.WRITE_BURST 0 0 1 0 0 1 
+current_state.CHECK_COUNT 0 1 0 0 0 1 
+current_state.DONE 1 0 0 0 0 1 

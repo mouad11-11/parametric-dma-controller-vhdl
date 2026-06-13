@@ -1,0 +1,124 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity DMAC is
+    port (
+        clk           : in    std_logic;
+        reset         : in    std_logic;
+
+        -- CPU Slave Interface
+        cpu_addr      : in    std_logic_vector(1 downto 0); 
+        cpu_write_en  : in    std_logic;
+        
+        -- Bidirectional System Data Bus (32-bit)
+        system_data   : inout std_logic_vector(31 downto 0);
+        
+        -- Bus Master Control Interface
+        master_addr   : out   std_logic_vector(31 downto 0);
+        master_rd     : out   std_logic;
+        master_wr     : out   std_logic;
+        master_ready  : in    std_logic;
+        
+        -- Interrupt
+        dma_irq       : out   std_logic
+    );
+end entity DMAC;
+
+architecture structural of DMAC is
+
+    -- Internal Registers
+    signal reg_src_addr  : unsigned(31 downto 0);
+    signal reg_dst_addr  : unsigned(31 downto 0);
+    signal reg_len       : unsigned(15 downto 0);
+    signal reg_ctrl      : std_logic_vector(7 downto 0);
+
+    -- Internal signals for block interconnection
+    signal s_bus_req      : std_logic;
+    signal s_mem_rd       : std_logic;
+    signal s_mem_wr       : std_logic;
+    signal s_fifo_full    : std_logic;
+    signal s_fifo_empty   : std_logic;
+    signal s_fifo_data_out : std_logic_vector(31 downto 0);
+    signal s_dma_busy     : std_logic;
+
+begin
+
+    -----------------------------------------------------
+    -- REGISTERS: Slave Programming Logic
+    -----------------------------------------------------
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            reg_src_addr <= (others => '0');
+            reg_dst_addr <= (others => '0');
+            reg_len      <= (others => '0');
+            reg_ctrl     <= (others => '0');
+        elsif rising_edge(clk) then
+            if cpu_write_en = '1' then
+                case cpu_addr is
+                    when "00" => reg_src_addr <= unsigned(system_data);
+                    when "01" => reg_dst_addr <= unsigned(system_data);
+                    when "10" => reg_len      <= unsigned(system_data(15 downto 0));
+                    when "11" => reg_ctrl     <= system_data(7 downto 0);
+                    when others => null;
+                end case;
+            end if;
+            
+            -- Reset START bit once the FSM takes over
+            if s_dma_busy = '1' then
+                reg_ctrl(0) <= '0';
+            end if;
+        end if;
+    end process;
+
+    -----------------------------------------------------
+    -- BUS DRIVER: Bidirectional Tri-state Logic
+    -----------------------------------------------------
+    -- Drive the bus only during DMA Write cycles; otherwise High-Z
+    system_data <= s_fifo_data_out when (s_mem_wr = '1') else (others => 'Z');
+
+    -----------------------------------------------------
+    -- FSM INSTANTIATION (Brain)
+    -----------------------------------------------------
+    U_FSM : entity work.dma_fsm
+        port map (
+            clk            => clk,
+            reset          => reset,
+            start_transfer => reg_ctrl(0),
+            total_len      => reg_len,
+            bus_req        => s_bus_req,
+            bus_grant      => master_ready,
+            mem_read       => s_mem_rd,
+            mem_write      => s_mem_wr,
+            mem_ready      => master_ready,
+            fifo_full      => s_fifo_full,
+            fifo_empty     => s_fifo_empty,
+            dma_busy       => s_dma_busy,
+            dma_done_irq   => dma_irq
+        );
+
+    -----------------------------------------------------
+    -- FIFO INSTANTIATION (Buffer)
+    -----------------------------------------------------
+    U_FIFO : entity work.dma_fifo
+        port map (
+            clk      => clk,
+            reset    => reset,
+            write_en => s_mem_rd,    
+            data_in  => system_data, 
+            full     => s_fifo_full,
+            read_en  => s_mem_wr,    
+            data_out => s_fifo_data_out,
+            empty    => s_fifo_empty
+        );
+
+    -----------------------------------------------------
+    -- MASTER OUTPUTS
+    -----------------------------------------------------
+    master_addr <= std_logic_vector(reg_src_addr) when s_mem_rd = '1' else 
+                   std_logic_vector(reg_dst_addr);
+    master_rd   <= s_mem_rd;
+    master_wr   <= s_mem_wr;
+
+end architecture structural;

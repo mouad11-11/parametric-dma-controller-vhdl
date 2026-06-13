@@ -1,0 +1,74 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity dma_fifo is
+    generic (
+        DATA_WIDTH : integer := 32;
+        FIFO_DEPTH : integer := 8   -- Depth of 8 allows 2 full bursts of 4
+    );
+    port (
+        clk      : in  std_logic;
+        reset    : in  std_logic;
+        
+        -- Write Interface (Data from Source)
+        write_en : in  std_logic;
+        data_in  : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        full     : out std_logic;
+        
+        -- Read Interface (Data to Destination)
+        read_en  : in  std_logic;
+        data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
+        empty    : out std_logic
+    );
+end entity dma_fifo;
+
+architecture behavioral of dma_fifo is
+    -- Circular buffer memory array
+    type memory_type is array (0 to FIFO_DEPTH-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal fifo_mem : memory_type := (others => (others => '0'));
+
+    -- Pointer and occupation tracking
+    signal write_ptr : integer range 0 to FIFO_DEPTH-1 := 0;
+    signal read_ptr  : integer range 0 to FIFO_DEPTH-1 := 0;
+    signal count     : integer range 0 to FIFO_DEPTH := 0;
+
+begin
+
+    
+
+    -- FIFO Control Logic
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            write_ptr <= 0;
+            read_ptr  <= 0;
+            count     <= 0;
+        elsif rising_edge(clk) then
+            -- 1. Simultaneous Read and Write
+            -- If both occur, pointers move but count remains stable
+            if (write_en = '1' and count < FIFO_DEPTH) and (read_en = '1' and count > 0) then
+                fifo_mem(write_ptr) <= data_in;
+                write_ptr <= (write_ptr + 1) mod FIFO_DEPTH;
+                read_ptr  <= (read_ptr + 1) mod FIFO_DEPTH;
+            
+            -- 2. Write Only
+            elsif (write_en = '1' and count < FIFO_DEPTH) then
+                fifo_mem(write_ptr) <= data_in;
+                write_ptr <= (write_ptr + 1) mod FIFO_DEPTH;
+                count     <= count + 1;
+
+            -- 3. Read Only
+            elsif (read_en = '1' and count > 0) then
+                read_ptr <= (read_ptr + 1) mod FIFO_DEPTH;
+                count    <= count - 1;
+            end if;
+        end if;
+    end process;
+
+    -- Continuous output assignments
+    data_out <= fifo_mem(read_ptr);
+    full     <= '1' when count = FIFO_DEPTH else '0';
+    empty    <= '1' when count = 0 else '0';
+
+end architecture behavioral;
