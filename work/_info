@@ -1,0 +1,195 @@
+m255
+K3
+13
+cModel Technology
+Z0 dC:\Users\hp\Desktop\DMAC
+Edma_fifo
+Z1 w1770658670
+Z2 DPx4 ieee 11 numeric_std 0 22 O3PF8EB`?j9=z7KT`fn941
+Z3 DPx3 std 6 textio 0 22 5>J:;AW>W0[[dW0I6EN1Q0
+Z4 DPx4 ieee 14 std_logic_1164 0 22 5=aWaoGZSMWIcH0i^f`XF1
+Z5 dC:\Users\hp\Desktop\DMAC
+Z6 8dma_fifo.vhd
+Z7 Fdma_fifo.vhd
+l0
+L5
+V4Ii3Q^@je@g67m:2F83EP3
+Z8 OV;C;10.1d;51
+33
+Z9 !s108 1781361297.831000
+Z10 !s90 -reportprogress|300|-2008|dma_fifo.vhd|
+Z11 !s107 dma_fifo.vhd|
+Z12 o-2008 -O0
+Z13 tExplicit 1
+!s100 U8A]4=C6Wh[lIocYbM16j2
+!i10b 1
+Abehavioral
+R2
+R3
+R4
+DEx4 work 8 dma_fifo 0 22 4Ii3Q^@je@g67m:2F83EP3
+l36
+L26
+VNNB_2GQOcdWD94[I4@MZ<0
+R8
+33
+R9
+R10
+R11
+R12
+R13
+!s100 hdd87GL9>9L9:aTnJSbBZ3
+!i10b 1
+Edma_fsm
+Z14 w1770657686
+R2
+R3
+R4
+R5
+Z15 8dma_fsm.vhd
+Z16 Fdma_fsm.vhd
+l0
+L5
+VfcG=iIkoXWNdG1[8Z>@J;3
+R8
+33
+Z17 !s108 1781361298.096000
+Z18 !s90 -reportprogress|300|-2008|dma_fsm.vhd|
+Z19 !s107 dma_fsm.vhd|
+R12
+R13
+!s100 zALM2S]>>m@YYSbjBWkab1
+!i10b 1
+Averified
+R2
+R3
+R4
+Z20 DEx4 work 7 dma_fsm 0 22 fcG=iIkoXWNdG1[8Z>@J;3
+l31
+L26
+VUkQ8>Y979DbP4_z0e<RF>2
+R8
+33
+R17
+R18
+R19
+R12
+R13
+!s100 MEBdR6U8ASnWV_4@4eWJB1
+!i10b 1
+Aoptimized
+R2
+R3
+R4
+R20
+l30
+L26
+VEQ=9]MUDi>Z1CL05ROkHZ0
+R8
+33
+Z21 !s90 -reportprogress|300|-2008|dma-fsm.vhd|
+Z22 !s107 dma-fsm.vhd|
+R12
+R13
+Z23 Fdma-fsm.vhd
+w1770657091
+Z24 8dma-fsm.vhd
+!s108 1770657152.918000
+!s100 YVjW<d6<a_9HP<jjPjC=`2
+!i10b 1
+Abehavioral
+R2
+R3
+R4
+R20
+l44
+L34
+V7`5PSNUZ8B0;AATBa1XC03
+R8
+33
+R21
+R12
+R13
+w1770646121
+R22
+R23
+R24
+!s108 1770653600.410000
+!s100 _Y33F0Ce1;OYU4BdDd_Lo0
+!i10b 1
+Edmac
+Z25 w1770694216
+R2
+R3
+R4
+R5
+Z26 8DMAC.vhd
+Z27 FDMAC.vhd
+l0
+L5
+Vg>JQQ?N`EhnAcO6zgfcA`2
+R8
+33
+Z28 !s108 1781361298.327000
+Z29 !s90 -reportprogress|300|-2008|DMAC.vhd|
+Z30 !s107 DMAC.vhd|
+R12
+R13
+!s100 7[KfX6GGG1D]Hne22a^3i3
+!i10b 1
+Astructural
+R2
+R3
+R4
+Z31 DEx4 work 4 dmac 0 22 g>JQQ?N`EhnAcO6zgfcA`2
+l66
+L20
+V8Tg[j9KPa9J9^@9:69?LV0
+!s100 5hWC5hMK=59GX]PXDBiJY0
+R8
+33
+R28
+R29
+R30
+R12
+R13
+!i10b 1
+Edmac_tb
+Z32 w1770686079
+R2
+R3
+R4
+R5
+Z33 8DMAC_tb.vhd
+Z34 FDMAC_tb.vhd
+l0
+L5
+VPi@emYodZNFm4`LnD:FBH2
+!s100 1ECJYF=dEBeB=@<<B>3=@3
+R8
+33
+!i10b 1
+Z35 !s108 1781361298.528000
+Z36 !s90 -reportprogress|300|-2008|DMAC_tb.vhd|
+Z37 !s107 DMAC_tb.vhd|
+R12
+R13
+Asim
+Z38 DPx3 std 3 env 0 22 kU@g3bh3dSQ6SKX7=V`LE3
+R31
+R2
+R3
+R4
+Z39 DEx4 work 7 dmac_tb 0 22 Pi@emYodZNFm4`LnD:FBH2
+l24
+L8
+Z40 V8[b;<ahzYNfCjA>jFMGXJ3
+Z41 !s100 440A1mn]`?EZDmZkU=U@j1
+R8
+33
+!i10b 1
+R35
+R36
+R37
+R12
+R13
